@@ -525,7 +525,7 @@ async function loadZones(){
 }
 async function localPoll(){
   try{ if(!zonesLoaded) await loadZones();
-    const obj=await localFetch('devices/device/'); const L=Object.values(obj).map(d=>{ const st={}; Object.entries(d.capabilitiesObj||{}).forEach(([k,v])=>st[k]=v&&v.value); return {id:d.id,name:d.name,zoneId:d.zone,type:d.class,state:st}; });
+    const obj=await localFetch('devices/device/'); const L=Object.values(obj).map(d=>{ const st={}; Object.entries(d.capabilitiesObj||{}).forEach(([k,v])=>st[k]=v&&v.value); return {id:d.id,name:d.name,zoneId:d.zone,type:d.virtualClass||d.class,state:st}; });
     mergeDevices(L); source='live'; lastUpdate=Date.now(); setStatus((isCloud(local.addr)?'Verbonden via Homey-cloud':'Verbonden met Homey Pro thuis')+' · <a href="#" id="openCfg">Instellingen</a>'); renderAll(); }
   catch(e){ setStatus((e.code==='auth'?e.message:'Kan Homey niet bereiken ('+(e.message||e)+')')+'. <a href="#" id="openCfg">Instellingen</a>'); }
 }
