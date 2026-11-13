@@ -1096,9 +1096,53 @@ const EXT = 0.3;
   for (const z of [0.97, 3.13]) block(g, 0.2, 0.6, z - 0.23, z + 0.23, y, y + 0.5, M.woodLight);
   block(g, 3.55, 4.13, 0.75, 3.35, y, y + 2.4, M.woodLight);
   for (const z of [1.27, 1.79, 2.31, 2.83]) block(g, 3.54, 3.55, z - 0.005, z + 0.005, y + 0.05, y + 2.35, mat('#a8916f'));
-  bed(0.25, 1.2, 7.3, 9.3);
-  bed(3.3, 4.9, 7.2, 9.3);
-  bed(6.35, 7.95, 4.5, 6.6);
+  { // kinderkamers, inloopkast (naar foto's 13 nov)
+    const wht = M.white, oak = mat('#c9a77c', { roughness: 0.7 }), pine = mat('#d3a86a', { roughness: 0.7 }), V = (a, b, c) => new THREE.Vector3(a, b, c), T = y + H_INT;
+    const pend = (X, Z, r, m, sy = 0.6) => { beam(g, V(X, T, Z), V(X, T - 0.45, Z), 0.008, mat('#eee')); const b = addMesh(g, new THREE.SphereGeometry(r, 20, 12), m); b.scale.set(1, sy, 1); b.position.set(X, T - 0.45 - r * sy, Z); };
+    const paper = (X0, X1, Z0, Z1, c) => block(g, X0, X1, Z0, Z1, y + 0.08, y + H_INT - 0.02, mat(c, { roughness: 0.9 }));
+    const rug = (X0, X1, Z0, Z1, c) => block(g, X0, X1, Z0, Z1, y, y + 0.015, mat(c, { roughness: 1 }));
+    const sofa = (X0, X1, Z0, Z1, back, m) => { block(g, X0, X1, Z0, Z1, y + 0.1, y + 0.45, m); const [a, b, c, d] = back === 'x0' ? [X0, X0 + 0.2, Z0, Z1] : back === 'x1' ? [X1 - 0.2, X1, Z0, Z1] : back === 'z0' ? [X0, X1, Z0, Z0 + 0.2] : [X0, X1, Z1 - 0.2, Z1]; block(g, a, b, c, d, y + 0.45, y + 0.85, m); };
+    // Kees — 11,4 m²: kajuitbed met lades langs de buurmuur (grijs behang), bureautje bij het raam, blauwgrijze wanden, rotan hanglamp
+    paper(0.16, 0.18, 6.3, 9.35, '#cfccd3');
+    paper(2.88, 2.9, 6.3, 9.35, '#7f97a3'); paper(0.2, 2.88, 9.32, 9.34, '#7f97a3');
+    block(g, 0.2, 1.15, 6.55, 8.6, y, y + 0.62, wht); block(g, 0.22, 1.13, 6.57, 8.58, y + 0.62, y + 0.72, mat('#9aa39a'));
+    for (const z of [6.9, 7.55, 8.2]) block(g, 1.15, 1.16, z - 0.28, z + 0.28, y + 0.08, y + 0.55, mat('#e6e6e6'));
+    block(g, 1.08, 1.12, 6.9, 7.9, y + 0.72, y + 0.95, wht);                              // valrand
+    block(g, 0.2, 1.0, 8.7, 9.3, y + 0.72, y + 0.76, M.woodLight); for (const z of [8.75, 9.25]) block(g, 0.25, 0.3, z - 0.02, z + 0.02, y, y + 0.72, wht);
+    block(g, 2.3, 2.85, 6.3, 6.75, y, y + 0.75, wht);                                    // wit kastje bij de deur
+    rug(1.3, 1.85, 6.9, 8.4, '#f3efe6');
+    { const r = addMesh(g, new THREE.CylinderGeometry(0.16, 0.3, 0.34, 10, 1, true), mat('#d9b98a', { side: THREE.DoubleSide, wireframe: true })); r.position.set(1.45, T - 0.75, 7.8); beam(g, V(1.45, T, 7.8), V(1.45, T - 0.58, 7.8), 0.008, mat('#eee')); }
+    // Pien — 13,2 m²: bed met vakkenkast-hoofdeinde langs de wand met Suus, kurken kledingkast in de hoek bij het raam, kaptafel met lampspiegel, roze bol-lamp
+    paper(6.08, 6.1, 6.3, 9.35, '#e8d8d0'); paper(3.0, 6.08, 9.32, 9.34, '#e8d8d0');
+    block(g, 5.15, 6.08, 6.9, 8.95, y, y + 0.45, wht); block(g, 5.17, 6.06, 6.92, 8.93, y + 0.45, y + 0.53, mat('#f4f1ec'));
+    block(g, 5.15, 6.08, 6.6, 6.9, y, y + 0.95, wht);                                     // vakkenkast als hoofdeinde
+    block(g, 5.5, 6.08, 8.95, 9.3, y, y + 1.95, wht); block(g, 5.48, 5.5, 8.97, 9.28, y + 0.05, y + 1.9, mat('#c39a5e', { roughness: 0.95 })); // kurken kast
+    block(g, 3.0, 3.48, 7.6, 8.8, y + 0.72, y + 0.76, wht); block(g, 3.0, 3.46, 8.35, 8.8, y, y + 0.72, wht); // kaptafel met ladeblok
+    block(g, 3.0, 3.04, 7.75, 8.35, y + 0.78, y + 1.25, M.mirror);
+    rug(3.9, 5.1, 7.2, 8.6, '#d9c3c0');
+    pend(4.55, 7.8, 0.26, mat('#f0a98e', { emissive: '#f0a98e', emissiveIntensity: 0.25 }));
+    // Suus — 19 m²: tweepersoonsbed in de erker (hoofd tegen bloemenbehang), bank en bureau langs de buitenwand, kaptafel bij het achterraam, grenen kast bij de deur
+    block(g, 7.75, 9.45, 3.25, 4.65, y, y + 0.42, mat('#6b3b2e')); block(g, 7.78, 9.42, 3.28, 4.62, y + 0.42, y + 0.55, mat('#e86f54'));
+    cyl(g, 9.1, 4.95, 0.22, y, y + 0.5, mat('#9aa4a8'), 16);
+    sofa(8.25, 9.05, 5.3, 6.5, 'x1', mat('#ece4d4'));
+    block(g, 7.35, 8.05, 6.85, 8.25, y + 0.73, y + 0.77, mat('#8a5a3c')); for (const [a, b] of [[7.4, 6.9], [7.95, 6.9], [7.4, 8.2], [7.95, 8.2]]) block(g, a - 0.02, a + 0.02, b - 0.02, b + 0.02, y, y + 0.73, mat('#8a5a3c'));
+    { const lm = mat('#d97a62'); for (const [r, h] of [[0.22, 1.05], [0.19, 1.13], [0.16, 1.21]]) { const c = addMesh(g, new THREE.ConeGeometry(r, 0.09, 24, 1, true), mat('#e48d78', { side: THREE.DoubleSide })); c.position.set(7.75, y + h, 7.05); } beam(g, V(7.75, y + 0.77, 7.05), V(7.75, y + 1.05, 7.05), 0.01, mat('#3b2a2a')); }
+    block(g, 6.45, 7.35, 9.0, 9.38, y + 0.72, y + 0.76, wht); block(g, 6.95, 7.35, 9.0, 9.38, y, y + 0.72, wht); block(g, 6.6, 7.2, 9.36, 9.38, y + 0.8, y + 1.45, M.mirror);
+    block(g, 7.45, 7.75, 8.95, 9.3, y, y + 0.8, mat('#333'));                             // trolley
+    block(g, 6.18, 6.2, 7.3, 8.4, y + 0.6, y + 1.9, mat('#a48468', { roughness: 1 }));    // regenboog-wandkleed
+    block(g, 6.2, 6.8, 5.2, 6.15, y, y + 2.0, pine);                                      // grenen kledingkast
+    rug(7.4, 8.1, 4.9, 6.1, '#e9dcd6');
+    pend(7.9, 5.6, 0.3, mat('#f2b9a0', { emissive: '#f2b9a0', emissiveIntensity: 0.25 }));
+    // inloopkast — U-vormige planken met bakken
+    for (const h of [0.35, 0.75, 1.15, 1.55, 1.95]) {
+      block(g, 0.14, 0.55, 4.3, 6.12, y + h, y + h + 0.025, wht);
+      block(g, 0.55, 1.85, 4.3, 4.7, y + h, y + h + 0.025, wht);
+      block(g, 0.55, 1.85, 5.75, 6.12, y + h, y + h + 0.025, wht);
+    }
+    for (let i = 0; i < 5; i++) block(g, 0.18, 0.5, 4.45 + i * 0.33, 4.73 + i * 0.33, y + 1.55 + 0.025, y + 1.8, mat('#9aa8b6'));
+    block(g, 0.7, 1.05, 5.0, 5.4, y, y + 0.3, mat('#9fd3c7')); block(g, 1.1, 1.45, 5.0, 5.4, y, y + 0.3, mat('#9fd3c7')); block(g, 1.5, 1.85, 5.05, 5.4, y, y + 0.28, mat('#e7c94f'));
+    cyl(g, 1.0, 5.2, 0.1, T - 0.06, T, mat('#fff', { emissive: '#fff', emissiveIntensity: 0.3 }), 16);
+  }
   block(g, 4.15, 6.05, 0.15, 0.95, y, y + 0.55, M.tile);
   block(g, 4.25, 5.95, 0.25, 0.85, y + 0.5, y + 0.56, M.white);
   block(g, 4.15, 6.05, 0.15, 0.17, y + 0.55, y + 2.45, M.marble);
@@ -1144,10 +1188,36 @@ const EXT = 0.3;
   knee([4.75, 0.65], [6.2, 0.65]);
   railing(g, [7.3, 6.05], [9.0, 6.05], Y_AT); // alleen leuning aan de ketelkant
   for (let i = 0; i < 6; i++) { const x0 = 7.35 + i * 0.27; block(g, x0, x0 + 0.3, 4.8, 6.0, Y_AT - 0.2 - i * 0.2, Y_AT - 0.15 - i * 0.2, M.stair); } // bovenste treden
-  for (let i = 0; i < 9; i++) block(g, 2.05, 2.75, 6.62 + i * 0.02, 6.67 + i * 0.02, Y_AT + 0.28 * (i + 1), Y_AT + 0.28 * (i + 1) + 0.04, M.stair);
+  for (let i = 0; i < 9; i++) block(g, 0.88, 1.57, 6.32 + i * 0.02, 6.37 + i * 0.02, Y_AT + 0.28 * (i + 1), Y_AT + 0.28 * (i + 1) + 0.04, M.stair);
   const y = Y_AT;
-  block(g, 1.2, 3.6, 3.3, 4.1, y, y + 0.45, M.sofa); block(g, 1.2, 3.6, 3.85, 4.1, y + 0.45, y + 0.85, M.sofa);
-  block(g, 1.5, 3.3, 0.9, 1.25, y, y + 0.45, M.counterTop); block(g, 1.7, 3.1, 1.05, 1.1, y + 0.5, y + 1.3, mat('#111'));
+  { // tv-kamer zolder (foto's 13 nov): bank onder het raam, bank langs de dakwand, tv tegen de buurmuur, roze kleed, wastafel + ladekast + tafelvoetbal in de hoek
+    const grey = mat('#7f8b97'), wht = M.white;
+    const sofa = (X0, X1, Z0, Z1, back) => { block(g, X0, X1, Z0, Z1, y + 0.12, y + 0.45, grey); const [a, b, c, d] = back === 'x1' ? [X1 - 0.2, X1, Z0, Z1] : [X0, X1, Z0, Z0 + 0.2]; block(g, a, b, c, d, y + 0.45, y + 0.82, grey); };
+    block(g, 1.0, 4.4, 1.25, 3.7, y, y + 0.02, mat('#d9a3a0', { roughness: 1 }));       // roze hoogpolig kleed
+    sofa(1.6, 3.6, 0.45, 1.3, 'z0');
+    sofa(4.55, 5.4, 1.4, 3.5, 'x1');
+    cyl(g, 2.85, 2.35, 0.42, y + 0.42, y + 0.46, mat('#c9a77c'), 28); cyl(g, 2.85, 2.35, 0.03, y, y + 0.42, mat('#222'), 8);
+    block(g, 0.12, 0.55, 1.4, 2.8, y, y + 0.5, mat('#2a2220'));                            // zwart tv-meubel
+    block(g, 0.3, 0.36, 1.45, 2.75, y + 0.55, y + 1.3, mat('#111', { roughness: 0.3 }));    // tv
+    block(g, 0.15, 0.4, 2.9, 3.15, y, y + 0.9, mat('#222'));                               // speaker
+    block(g, 5.55, 6.6, 1.0, 3.1, y, y + 0.2, M.bedCover);                                 // matras langs de knieschot
+    block(g, 5.0, 5.45, 4.2, 4.55, y + 0.75, y + 0.85, wht); cyl(g, 5.22, 4.5, 0.12, y + 1.2, y + 1.22, M.mirror, 20);
+    block(g, 5.55, 6.3, 4.1, 4.55, y, y + 1.05, wht);                                      // witte ladekast
+    block(g, 6.45, 7.3, 3.75, 4.3, y + 0.55, y + 0.8, mat('#1e3b22'));                     // tafelvoetbal
+    block(g, 2.95, 4.0, 4.05, 4.55, y, y + 2.05, wht);                                     // witte inbouwkast naast de deur
+    block(g, 3.35, 3.75, 3.5, 3.85, y, y + 0.5, mat('#e9cf3a'));                           // geel krukje
+    cyl(g, 4.3, 0.6, 0.015, y, y + 1.5, mat('#ddd'), 8); cyl(g, 4.3, 0.6, 0.1, y + 1.45, y + 1.6, mat('#eee'), 12);
+    cyl(g, 2.9, 2.3, 0.22, y + 2.3, y + 2.38, mat('#fff', { emissive: '#fff', emissiveIntensity: 0.3 }), 20);
+    for (let i = 0; i < 9; i++) { const t = i / 8; block(g, 0.6 + t * 4.2 - 0.07, 0.6 + t * 4.2 + 0.07, 0.6 + t * 3.4, 0.62 + t * 3.4, y + 1.95, y + 2.12, mat(['#e07a3a', '#3fa38f', '#2f5d8a', '#e9b44c'][i % 4])); } // vlaggenlijn
+  }
+  { // achterste deel zolder (video): droogrekken, witte inbouwkasten tegen de buurmuur met luik naar de pakzolder erboven, deurtje in de knieschot
+    const rek = (X0, X1, Z0, Z1) => { for (const z of [Z0, (Z0 + Z1) / 2, Z1]) block(g, X0, X1, z - 0.01, z + 0.01, y + 0.95, y + 0.97, M.white); for (const x of [X0, X1]) for (const z of [Z0, Z1]) block(g, x - 0.01, x + 0.01, z - 0.01, z + 0.01, y, y + 0.97, M.white); block(g, X0 + 0.1, X1 - 0.1, Z0 + 0.05, Z1 - 0.05, y + 0.45, y + 0.95, mat('#3c4a63', { transparent: true, opacity: 0.55 })); };
+    rek(2.2, 3.9, 5.6, 6.3); rek(4.2, 5.9, 6.0, 6.7); rek(2.6, 4.3, 7.0, 7.6);
+    block(g, 0.1, 0.7, 4.9, 7.1, y, y + 2.15, M.white); for (const z of [5.63, 6.37]) block(g, 0.7, 0.71, z - 0.004, z + 0.004, y + 0.05, y + 2.1, mat('#cfcfcf'));
+    block(g, 3.1, 3.75, 8.8, 8.83, y, y + 1.15, M.white);                                  // deurtje knieschot
+    block(g, 5.2, 5.6, 7.3, 7.6, y, y + 0.3, mat('#e7c94f'));                              // gele wasmand
+    cyl(g, 3.0, 6.6, 0.2, y + 2.3, y + 2.38, mat('#fff', { emissive: '#fff', emissiveIntensity: 0.3 }), 20);
+  }
   block(g, 0.7, 1.3, 7.9, 8.5, y, y + 0.85, M.white); block(g, 1.4, 2.0, 7.9, 8.5, y, y + 0.85, M.white);
   block(g, 7.75, 8.35, 6.15, 6.6, y + 0.6, y + 1.5, M.white);
   block(g, 7.6, 8.6, 7.6, 8.4, y, y + 1.15, mat('#d9dde0', { roughness: 0.4 }));
@@ -1157,10 +1227,10 @@ const EXT = 0.3;
 // --- Bergzolder ---
 {
   const g = floors.bz;
-  slab(g, rect(0, 7.5, 2.75, 6.75), Y_BZ, 0.2, M.ply, [rect(2.0, 2.8, 5.9, 6.6)]);
+  slab(g, rect(0, 7.5, 2.75, 6.75), Y_BZ, 0.2, M.ply, [rect(0.85, 1.6, 5.55, 6.3)]); // luik vlizotrap boven de inbouwkasten
   const y = Y_BZ;
   block(g, 1.0, 1.6, 3.5, 4.1, y, y + 0.5, M.woodLight); block(g, 1.7, 2.2, 3.6, 4.0, y, y + 0.4, M.woodLight);
-  block(g, 6.0, 6.7, 3.2, 3.8, y, y + 0.6, M.woodLight); block(g, 2.6, 3.4, 6.0, 6.6, y, y + 0.45, M.woodLight);
+  block(g, 6.0, 6.7, 3.2, 3.8, y, y + 0.6, M.woodLight); block(g, 2.6, 3.4, 5.4, 6.0, y, y + 0.45, M.woodLight);
 }
 
 // --- Dak ---
