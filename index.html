@@ -141,6 +141,9 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .lmk svg{width:13px;height:13px}
 .lmk.on{background:#ffd58a;border-color:#fff3d6;color:#6b3f00;box-shadow:0 0 14px 3px rgba(255,190,90,.55)}
 .lmk.ac{border-color:#6aa8ff;color:#9cc7ff}
+.lmk.robot{border-color:#3ddc97;color:#3ddc97}
+.lmk.robot.on{background:#3ddc97;border-color:#d8ffef;color:#0d2a1e;box-shadow:0 0 14px 3px rgba(61,220,151,.5)}
+.vb{display:flex;gap:4px}.vb button{border:1px solid var(--line);border-radius:8px;padding:5px 9px;font-size:12px}
 .lmk.ac.on{background:#4cc3ff;border-color:#d8f2ff;color:#04202f;box-shadow:0 0 14px 3px rgba(76,195,255,.55)}
 .lmk.sel{outline:2px solid var(--acc);outline-offset:2px}
 @media (max-width:700px){ .bar-bot{bottom:56px} .lbl{font-size:10.5px} .lbl .st{display:none} .lmk{width:22px;height:22px} }
@@ -262,7 +265,7 @@ function reindex(){ devById = {}; devices.forEach(d=>devById[d.id]=d); }
 const zoneRoom = {}; ROOMS.forEach(r=>r.zones.forEach(z=>zoneRoom[z]=r.n));
 const roomOf = d => d.type==='heatpump' ? 18 : zoneRoom[d.zoneId];
 const isLight = d => d.type==='light';
-const target = d => (isLight(d)||d.id==='f0259acc-46d0-4bdf-aa97-cb3bcd844167'||d.type==='airconditioning') ? (d.state.onoff ? (typeof d.state.dim==='number'? Math.max(.25,d.state.dim):1) : 0) : 0;
+const target = d => d.type==='vacuumcleaner' ? (d.state.is_cleaning && !d.state.pause_clean ? 1 : 0) : (isLight(d)||d.id==='f0259acc-46d0-4bdf-aa97-cb3bcd844167'||d.type==='airconditioning') ? (d.state.onoff ? (typeof d.state.dim==='number'? Math.max(.25,d.state.dim):1) : 0) : 0;
 const findDev = re => devices.find(d=>re.test(d.name));
 
 /* ================= SUN / AMBIENT ================= */
@@ -319,7 +322,8 @@ window.__houseReady = function(initHouse){
       onLevel:(key,count)=>{ const fl={gf:'gf',ff:'ff',at:'at',bz:'bz'}[key];
         if(fl){ const cur=ROOMS.find(r=>r.n===selRoom); if(!cur||(cur.floor!==fl&&!(fl==='gf'&&cur.floor==='out'))){ const first=ROOMS.find(r=>r.floor===fl&&devices.some(d=>roomOf(d)===r.n&&isLight(d)))||ROOMS.find(r=>r.floor===fl); if(first) select(first.n); } }
         if(!count && key!=='all') toast('Geen schakelbare lampen op '+({ff:'de 1e verdieping',at:'zolder',bz:'de bergzolder'}[key]||'deze verdieping')); },
-      onLampClick:(id)=>{ const d=devById[id]; if(!d) return; const r=roomOf(d); if(r!=null && r!==selRoom) select(r); house.selectLamp(id); setCap(id,'onoff',!d.state.onoff); toast(`${d.name.trim()} ${d.state.onoff?'aan':'uit'}`); }
+      onLampClick:(id)=>{ const d=devById[id]; if(!d) return;
+        if(d.type==='vacuumcleaner'){ const busy=d.state.is_cleaning&&!d.state.pause_clean; d.state.is_cleaning=!busy; d.state.pause_clean=false; setCap(id, busy?'dock':'clean_full', true); toast(busy?`${d.name} gaat terug naar het dock`:`${d.name} begint met zuigen`); return; } const r=roomOf(d); if(r!=null && r!==selRoom) select(r); house.selectLamp(id); setCap(id,'onoff',!d.state.onoff); toast(`${d.name.trim()} ${d.state.onoff?'aan':'uit'}`); }
     });
     document.getElementById('h3dmsg').remove();
     house.setDaylight(ambFor(), true);
@@ -381,6 +385,7 @@ function renderNotes(){
   if(e.enAlarms) n.push(['☀️','#6b5a2b',`${e.enAlarms} omvormers melden onderprestatie`,'Enphase dak'+(amb<0.5?' · normaal in het donker':'')]);
   const ac=findDev(/achterdeur lamp/i); const pk=devById['ec31fa5c-de02-4aa1-bfe2-f61875be6f0c'];
   if(pk&&pk.state.onoff&&amb>0.7) n.push(['💡','#6b5a2b','Tuinverlichting staat aan','Overdag niet nodig']);
+  devices.filter(d=>d.type==='vacuumcleaner').forEach(v=>{ const s=v.state; if(s.alarm_stuck) n.unshift(['🤖','#6b2b2b',`${v.name} zit vast`,'Robotstofzuiger']); else if(s.is_cleaning) n.push(['🤖','#2b5a4a',`${v.name} is aan het zuigen · ${s.measure_battery??'–'}%`,`${nl(s.clean_area||0,0)} m² gedaan`]); if(s.alarm_water_box_empty) n.push(['💧','#2b4a6b',`Waterbak ${v.name} is leeg`,'Robotstofzuiger']); });
   if(e.hpOn) n.push(['♨️','#5a3b2b',`Warmtepomp draait · ${fmtW(e.hp)}`,'Ketelruimte']);
   const html = `<h3>Nu thuis <span>${n.length} dingen</span></h3>` + n.slice(0,5).map(([i,c,t,s])=>`<div class="note"><div class="ni" style="background:${c}55;border:1px solid ${c}">${i}</div><div><b>${esc(t)}</b><small>${esc(s)}</small></div></div>`).join('');
   document.getElementById('nuDesk').innerHTML=html;
@@ -415,6 +420,7 @@ function devCard(d){
   if(isLight(d)){ sub = s.onoff? ('Aan'+(typeof s.dim==='number'?` · ${Math.round(s.dim*100)}%`:'')+(s.measure_power?` · ${nl(s.measure_power)} W`:'')) : 'Uit'; ctl=sw('onoff');
     if(typeof s.dim==='number') extra=`<div class="dim"><input type="range" min="1" max="100" value="${Math.round(s.dim*100)}" data-dim="${d.id}"><span>${Math.round(s.dim*100)}%</span></div>`; }
   else if(d.type==='socket'||d.type==='tv'){ sub=s.onoff?'Aan'+(s.measure_power?` · ${nl(s.measure_power)} W`:''):'Uit'; ctl=sw('onoff'); }
+  else if(d.type==='vacuumcleaner'){ const st=s.alarm_stuck?'Zit vast':s.is_cleaning?(s.pause_clean?'Gepauzeerd':'Aan het zuigen'):(s.battery_charging_state==='charging'?'Laden in dock':'In het dock'); sub=`${st} · accu ${s.measure_battery??'–'}%${s.clean_area?` · ${nl(s.clean_area,0)} m²`:''}`; ctl=`<div class="vb"><button data-vac="${d.id}" data-cap="clean_full">Start</button><button data-vac="${d.id}" data-cap="pause_clean">Pauze</button><button data-vac="${d.id}" data-cap="dock">Dock</button></div>`; }
   else if(d.type==='airconditioning'){ sub=`${s.onoff?'Aan':'Uit'} · ${nl(s.measure_temperature,0)} °C`; ctl=sw('onoff'); }
   else if(d.type==='thermostat'){ sub=`${nl(s.measure_temperature)} °C nu`; ctl=`<div class="step"><button data-temp="${d.id}" data-d="-0.5">−</button><div><small>Ingesteld</small><b>${nl(s.target_temperature)}°</b></div><button data-temp="${d.id}" data-d="0.5">+</button></div>`; }
   else if(d.type==='blinds'){ sub=s.windowcoverings_state?({up:'Omhoog',down:'Omlaag',idle:'Gestopt'}[s.windowcoverings_state]||s.windowcoverings_state):'Zonnescherm'; ctl=`<div class="bl"><button data-blind="${d.id}" data-v="up">▲</button><button data-blind="${d.id}" data-v="idle">■</button><button data-blind="${d.id}" data-v="down">▼</button></div>`; }
@@ -457,8 +463,9 @@ function errText(e){
   return 'Actie mislukt: '+((e&&e.message)||e);
 }
 document.addEventListener('click',ev=>{
-  const t=ev.target.closest('[data-mode],[data-room],[data-dev],[data-toggle],[data-temp],[data-blind]'); if(!t) return;
+  const t=ev.target.closest('[data-vac],[data-mode],[data-room],[data-dev],[data-toggle],[data-temp],[data-blind]'); if(!t) return;
   if(t.dataset.mode){ mode=t.dataset.mode; if(house) house.setDaylight(ambFor()); renderAll(); return; }
+  if(t.dataset.vac){ const d=devById[t.dataset.vac], c=t.dataset.cap; if(c==='clean_full'){ d.state.is_cleaning=true; d.state.pause_clean=false; } if(c==='dock'){ d.state.is_cleaning=false; } setCap(d.id,c,true); return; }
   if(t.dataset.toggle){ const d=devById[t.dataset.toggle]; if(house&&isLight(d)) house.selectLamp(d.id); setCap(d.id,t.dataset.cap,!d.state[t.dataset.cap]); return; }
   if(t.dataset.temp){ const d=devById[t.dataset.temp]; setCap(d.id,'target_temperature',Math.round(((d.state.target_temperature||20)+parseFloat(t.dataset.d))*2)/2); return; }
   if(t.dataset.blind){ setCap(t.dataset.blind,'windowcoverings_state',t.dataset.v); return; }
@@ -903,8 +910,9 @@ const EXT = 0.3;
   const g = floors.gf;
   slab(g, GF_POLY, 0, 0.3, mat('#b8bbba', { roughness: 0.5 }));
   slab(g, [[4.5, 1.75], [6.3, 1.75], [6.3, 4.05], [6.4, 4.05], [6.4, 6.2], [4.0, 6.2], [4.0, 4.05], [4.5, 4.05]], 0.012, 0.012, mat('#9fa2a0', { roughness: 0.6 })); // hal: grijze gietvloer
-  slab(g, rect(6.3, 7.95, 1.7, 4.05), 0.012, 0.012, M.tile);
-  slab(g, [[7.95, 2.55], [slantX(2.55), 2.55], [slantX(7.05), 7.05], [6.4, 7.05], [6.4, 4.05], [7.45, 4.05], [7.45, 2.85], [7.95, 2.85]], 0.012, 0.012, M.tile);
+  slab(g, rect(6.3, 7.95, 1.7, 2.85), 0.012, 0.012, mat('#d9d2c6', { roughness: 0.6 })); // wc-tegels
+  slab(g, rect(6.3, 7.95, 2.85, 3.6), 0.012, 0.012, mat('#9fa2a0', { roughness: 0.6 })); // nis + meterkast
+  slab(g, [[7.95, 2.55], [slantX(2.55), 2.55], [slantX(7.05), 7.05], [6.4, 7.05], [6.4, 4.05], [6.3, 4.05], [6.3, 3.6], [7.95, 3.6]], 0.012, 0.012, M.tile);
   // begane grond 1-op-1 naar plattegrond (maten in m, y = vanaf voorgevel)
   const T0 = slantX(2.55), T1 = slantX(12.35);
   const ext = [
@@ -929,10 +937,14 @@ const EXT = 0.3;
     { a: [4.0, 4.05], b: [4.5, 4.05] },
     { a: [4.0, 4.05], b: [4.0, 6.2], ops: [{ s: 0.0, e: 0.75, k: 'door' }] }, // deur woonkamer
     { a: [4.0, 6.2], b: [6.4, 6.2] }, // achterwand trap
-    { a: [6.3, 1.7], b: [6.3, 4.05], ops: [{ s: 0.5, e: 1.1, k: 'door' }, { s: 1.4, e: 2.2, k: 'door' }] }, // deuren wc en meterkast
-    { a: [6.3, 2.85], b: [7.95, 2.85] }, // wc | meterkast
-    { a: [7.45, 2.85], b: [7.45, 4.05] }, // achterwand meterkast
-    { a: [6.3, 4.05], b: [7.45, 4.05] },
+    { a: [6.3, 1.7], b: [6.3, 2.85] }, // hal-wand met schoenenkastje
+    { a: [6.3, 3.6], b: [6.3, 4.05] },
+    { a: [6.3, 2.85], b: [7.45, 2.85], ops: [{ s: 0.25, e: 0.95, k: 'door' }] }, // nis: wc-deur links
+    { a: [6.3, 3.6], b: [7.95, 3.6] }, // nis: rechterwand (bijkeuken erachter)
+    { a: [7.45, 2.85], b: [7.45, 3.6], ops: [{ s: 0.03, e: 0.72, k: 'door' }] }, // meterkast: deur recht vooruit in de nis
+    { a: [7.45, 2.85], b: [7.95, 2.85] },
+    { a: [7.95, 2.55], b: [7.95, 3.6] }, // zelfde achterwand als wc
+    { a: [6.3, 4.05], b: [6.4, 4.05] },
     { a: [6.4, 4.05], b: [6.4, 7.7], ops: [{ s: 0.0, e: 0.8, k: 'door' }] }, // deur hal -> bijkeuken (naast de trap)
     { a: [6.4, 7.05], b: [slantX(7.05), 7.05] }, // blinde muur bijkeuken | keuken
   ];
@@ -954,8 +966,20 @@ const EXT = 0.3;
   for (const yy of [0.9, 1.3, 1.7]) block(g, 0.55, 0.57, 5.7, 8.6, yy, yy + 0.03, mat('#2e1d14'));
   { const l = addMesh(g, new THREE.CircleGeometry(0.12, 20), M.lamp, false); l.rotation.y = Math.PI / 2; l.position.set(0.16, 1.85, 5.1); }
   block(g, 1.45, 2.45, 6.0, 8.4, 0.72, 0.77, dark);
-  for (const z of [6.0, 8.4]) for (const x of [1.5, 2.4]) block(g, x - 0.04, x + 0.04, z - 0.04 + (z < 7 ? 0.08 : -0.08), z + 0.04 + (z < 7 ? 0.08 : -0.08), 0, 0.72, dark);
-  for (const z of [6.4, 7.2, 8.0]) for (const x of [1.0, 2.9]) { block(g, x - 0.22, x + 0.22, z - 0.22, z + 0.22, 0.42, 0.46, mint); block(g, x - 0.03, x + 0.03, z - 0.03, z + 0.03, 0, 0.42, M.white); }
+  for (const z of [6.0, 8.4]) for (const x of [1.5, 2.4]) cyl(g, x, z + (z < 7 ? 0.1 : -0.1), 0.035, 0, 0.72, mat('#5d6064', { metalness: 0.6, roughness: 0.35 }), 10); // stalen poten
+  { // Eames-kuipstoelen (DAR) op draadonderstel rond de eettafel
+    const shell = mat('#d9d7d1', { roughness: 0.45 }), wire = mat('#8a8d91', { metalness: 0.7, roughness: 0.3 });
+    const V = (x, y, z) => new THREE.Vector3(x, y, z);
+    const chair = (x, z, dir) => { // dir: +1 = kijkt naar +x
+      block(g, x - 0.22, x + 0.2, z - 0.23, z + 0.23, 0.4, 0.45, shell); // zitting
+      const back = new THREE.Mesh(new THREE.CylinderGeometry(0.27, 0.25, 0.24, 24, 1, true, 0, Math.PI), new THREE.MeshStandardMaterial({ color: '#d9d7d1', roughness: 0.45, side: THREE.DoubleSide }));
+      back.position.set(x - dir * 0.02, 0.56, z); back.rotation.y = dir > 0 ? Math.PI : 0; back.castShadow = true; g.add(back); // rug + armleuningen
+      const top = [[-0.12, -0.12], [-0.12, 0.12], [0.12, -0.12], [0.12, 0.12]], bot = [[-0.21, -0.21], [-0.21, 0.21], [0.21, -0.21], [0.21, 0.21]];
+      for (let i = 0; i < 4; i++) beam(g, V(x + bot[i][0], 0, z + bot[i][1]), V(x + top[i][0], 0.4, z + top[i][1]), 0.008, wire).castShadow = false;
+      beam(g, V(x - 0.17, 0.16, z - 0.17), V(x + 0.17, 0.16, z + 0.17), 0.006, wire); beam(g, V(x - 0.17, 0.16, z + 0.17), V(x + 0.17, 0.16, z - 0.17), 0.006, wire);
+    };
+    for (const z of [6.4, 7.2, 8.0]) { chair(1.0, z, 1); chair(2.9, z, -1); }
+  }
   cyl(g, 1.95, 7.2, 0.005, 1.95, 2.6, M.white, 4);
   { const sh = addMesh(g, new THREE.CylinderGeometry(0.14, 0.26, 0.45, 18, 1, true), mat('#f3f0ea', { side: THREE.DoubleSide })); sh.position.set(1.95, 1.75, 7.2); }
   for (const [x0, x1] of [[0.1, 0.35], [1.95, 2.3], [3.95, 4.2]]) block(g, x0, x1, 0.16, 0.22, 0.05, 2.55, curtain);
@@ -982,25 +1006,34 @@ const EXT = 0.3;
   { const gl = mat('#bfe3dc', { transparent: true, opacity: 0.45, roughness: 0.1 }); block(g, 4.15, 4.55, 6.08, 6.42, 0.42, 0.45, gl); block(g, 4.15, 4.18, 6.08, 6.42, 0, 0.42, gl); block(g, 4.52, 4.55, 6.08, 6.42, 0, 0.42, gl); } // glazen bijzettafel
   cyl(g, 3.98, 6.3, 0.14, 0, 0.32, mat('#b5643f'), 12); blob(g, 3.98, 0.85, 6.3, 0.26, 1.6, M.hedge); // plant in de hoek
   // wc: toilet tegen achterwand, fonteintje bij raampje
-  block(g, 7.9, 7.93, 1.75, 2.8, 0, 1.25, M.sage);
-  block(g, 7.4, 7.88, 2.05, 2.45, 0.3, 0.72, M.white); block(g, 7.86, 7.9, 2.08, 2.42, 0.95, 1.15, M.white);
-  block(g, 6.95, 7.4, 1.75, 2.0, 0.4, 0.82, M.oak); block(g, 6.93, 7.42, 1.73, 2.02, 0.82, 0.92, M.white);
-  block(g, 7.15, 7.19, 1.76, 1.8, 0.92, 1.12, M.copper);
-  block(g, 7.15, 7.42, 2.95, 3.95, 0.3, 2.0, mat('#c9ccc8')); // meterkast (ondiep)
+  // wc: hangtoilet tegen groen betegelde voorzetwand, ronde spiegel op de zijwand
+  block(g, 6.4, 7.9, 1.75, 1.95, 0, 1.15, M.sage); block(g, 6.4, 7.9, 1.75, 1.98, 1.15, 1.19, M.sage);
+  block(g, 6.95, 7.35, 1.95, 2.45, 0.32, 0.72, M.white);
+  { const mir = addMesh(g, new THREE.CylinderGeometry(0.3, 0.3, 0.02, 28), mat('#cfd8dc', { roughness: 0.05, metalness: 0.6 }), false); mir.rotation.z = Math.PI / 2; mir.position.set(6.32, 1.45, 2.35); }
+  block(g, 7.6, 7.92, 2.92, 3.55, 0.3, 2.0, mat('#c9ccc8')); // meterkast (ondiep)
   { // bijkeuken: 2 koelkasten, hoge kast, was-droogcombinatie tegen de schuine buitenmuur
     const sw = z => slantX(z) - 0.2, wht = mat('#eeeeea', { roughness: 0.4 });
-    block(g, sw(3.55) - 0.65, sw(3.55), 2.95, 3.55, 0, 1.85, wht);
-    block(g, sw(4.15) - 0.65, sw(4.15), 3.58, 4.15, 0, 1.6, wht);
-    block(g, sw(4.8) - 0.6, sw(4.8), 4.18, 4.8, 0, 2.0, mat('#f3f1ea', { roughness: 0.5 }));
-    const xw = sw(5.6);
-    block(g, xw - 0.62, xw, 4.95, 5.6, 0, 0.85, M.white); block(g, xw - 0.62, xw, 4.95, 5.6, 0.87, 1.72, M.white);
-    for (const yy of [0.45, 1.3]) { const c = addMesh(g, new THREE.CircleGeometry(0.17, 20), mat('#3a3f45', { roughness: 0.2 }), false); c.rotation.y = -Math.PI / 2; c.position.set(xw - 0.63, yy, 5.27); }
-    const pl = addMesh(g, new THREE.CircleGeometry(0.17, 20), M.white, false); pl.rotation.x = Math.PI / 2; pl.position.set(7.5, H_INT - 0.02, 4.4);
+    // tegen de schuine muur, van links (voorkant) naar rechts: hoge koelkast, koelkast, hoge kast, droger op wasmachine
+    block(g, sw(4.62) - 0.65, sw(4.62), 4.0, 4.62, 0, 1.85, wht);
+    block(g, sw(5.25) - 0.62, sw(5.25), 4.66, 5.25, 0, 1.6, wht);
+    block(g, sw(5.9) - 0.6, sw(5.9), 5.29, 5.9, 0, 2.0, mat('#f3f1ea', { roughness: 0.5 }));
+    const xw = sw(6.6);
+    block(g, xw - 0.62, xw, 5.96, 6.6, 0, 0.85, M.white); block(g, xw - 0.62, xw, 5.96, 6.6, 0.87, 1.72, M.white);
+    for (const yy of [0.45, 1.3]) { const c = addMesh(g, new THREE.CircleGeometry(0.17, 20), mat('#3a3f45', { roughness: 0.2 }), false); c.rotation.y = -Math.PI / 2; c.position.set(xw - 0.63, yy, 6.28); }
+    // open schoenenrek links (tegen de wand van de nis)
+    block(g, 6.5, 7.55, 3.62, 3.95, 0, 1.9, M.white);
+    for (const yy of [0.3, 0.6, 0.9, 1.2, 1.5]) block(g, 6.52, 7.53, 3.62, 3.94, yy, yy + 0.02, mat('#e6e4df'));
+    // inbouw-voorraadkast met schuifdeur achterin rechts, sleutelrekje en afvalbakken op de wand ervoor
+    block(g, 6.42, 7.0, 5.7, 7.03, 0, H_INT - 0.08, mat('#f2f1ec', { roughness: 0.5 }));
+    block(g, 7.0, 7.02, 5.8, 6.55, 0.05, 2.15, mat('#f8f8f5', { roughness: 0.4 })); // schuifdeur
+    block(g, 6.42, 6.45, 4.95, 5.45, 1.4, 1.48, mat('#b7bcbf', { metalness: 0.6 })); block(g, 6.42, 6.6, 4.98, 5.4, 1.6, 1.85, mat('#f2f2f2')); // sleutels + mandje
+    cyl(g, 6.66, 5.25, 0.16, 0, 0.62, mat('#b9bdc0', { metalness: 0.7, roughness: 0.3 }), 18); block(g, 6.5, 6.85, 5.45, 5.68, 0, 0.6, mat('#2b2d31'));
+    const pl = addMesh(g, new THREE.CircleGeometry(0.17, 20), M.white, false); pl.rotation.x = Math.PI / 2; pl.position.set(7.4, H_INT - 0.02, 5.3);
   }
   // hal: kapstok op de lange wand, groen kastje bij de voordeur
   block(g, 4.51, 4.57, 2.1, 3.75, 1.72, 1.8, mat('#1d1e20'));
   for (let z = 2.25; z < 3.7; z += 0.3) block(g, 4.57, 4.65, z - 0.02, z + 0.02, 1.66, 1.72, mat('#1d1e20'));
-  block(g, 5.88, 6.28, 1.8, 2.15, 0, 0.9, mat('#8e9c80', { roughness: 0.6 }));
+  block(g, 6.05, 6.28, 1.95, 2.7, 0.15, 1.0, mat('#8e9c80', { roughness: 0.6 })); // groen schoenenkastje naast de nis
 }
 
 // --- 1e verdieping ---
@@ -1468,6 +1501,7 @@ const LAMP_DEF = {
   'b76cb351-61d1-4475-84e8-1d459d4c0e83': { f: 'out', p: [4.45, 2.3, 1.5], I: 7 },              // Lamp voordeur buiten
   '6e3bf2b0-20c5-4314-820d-2341bea7501d': { f: 'out', p: [4.32, 2.4, 10.95], I: 7 },            // Achterdeur lamp
   'ec31fa5c-de02-4aa1-bfe2-f61875be6f0c': { f: 'out', kind: 'string', I: 5 },                   // Prikkabel tuin
+  '5712c8d4-2337-40c7-9569-7b9ad6c359ab': { f: 'gf', kind: 'robot', p: [0.42, 0.0, 9.31] },     // Roborock Bert: dock in hoek buurmuur / schuifpui
   '5111de89-d753-43ba-ba0d-1bee2c6072f8': { f: 'ff', kind: 'ac', p: [5.93, 2.15, 5.45] },          // Airco: trapgat, tegen muur slaapkamer 4
   'f0259acc-46d0-4bdf-aa97-cb3bcd844167': { f: 'out', kind: 'fountain', p: [...(() => { const [x, z] = G(7.2, 3.4); return [x, 0.4, z]; })()] }, // Fontein
 };
@@ -1484,6 +1518,7 @@ function catenary(a, b, sag, step) {
   LAMP_DEF['ec31fa5c-de02-4aa1-bfe2-f61875be6f0c'].pts = pts;
 }
 const BULB_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.8.8 1 1.5 1 2.5h6c0-1 .2-1.7 1-2.5A6 6 0 0 0 12 3z"/></svg>';
+const ROBOT_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="9" r="2.2"/><path d="M7 15h10"/></svg>';
 const AC_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M4 6l16 12M20 6L4 18"/></svg>';
 const lampObjs = {};
 for (const [id, d] of Object.entries(LAMP_DEF)) {
@@ -1492,6 +1527,17 @@ for (const [id, d] of Object.entries(LAMP_DEF)) {
   if (d.kind === 'group') {
     if (d.p[1] < 1) block(parent, d.p[0] - 0.05, d.p[0] - 0.03, d.p[2] - 0.05, d.p[2] + 0.05, y0 + d.p[1] - 0.05, y0 + d.p[1] + 0.05, M.white);
     // alleen een schakelknop; het licht zit in de twee wandlampen
+  } else if (d.kind === 'robot') {
+    const wm = mat('#f4f4f2', { roughness: 0.35 });
+    block(parent, 0.02, 0.4, 9.13, 9.5, y0, y0 + 0.45, wm); // laadstation
+    block(parent, 0.02, 0.64, 9.15, 9.48, y0, y0 + 0.02, wm); // oprijplaat
+    const rb = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.09, 28), wm); body.position.y = 0.055; body.castShadow = true; rb.add(body);
+    const lid = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.035, 16), mat('#2b2f36')); lid.position.set(0.05, 0.115, 0); rb.add(lid);
+    const led = new THREE.MeshStandardMaterial({ color: '#2a3340', emissive: '#3ddc97', emissiveIntensity: 0 });
+    const lm = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.012, 0.012), led); lm.position.set(0.15, 0.1, 0); rb.add(lm);
+    rb.position.set(d.p[0], y0, d.p[2]); parent.add(rb);
+    o.robot = rb; o.led = led; o.home = [d.p[0], d.p[2]]; o.rx = d.p[0]; o.rz = d.p[2];
   } else if (d.kind === 'ac') {
     const [x, y, z] = d.p, Y = y0 + y;
     block(parent, x - 0.2, x + 0.05, z - 0.45, z + 0.45, Y - 0.16, Y + 0.16, mat('#f4f5f6', { roughness: 0.35 }));
@@ -1558,7 +1604,7 @@ for (const [id, d] of Object.entries(LAMP_DEF)) {
     if (d.stand) { const c = beam(parent, new THREE.Vector3(d.p[0], y0, d.p[2]), new THREE.Vector3(d.p[0], y0 + d.stand, d.p[2]), 0.03, mat('#222')); c.castShadow = false;
       const sh = addMesh(parent, new THREE.CylinderGeometry(0.16, 0.22, 0.3, 18, 1, true), mat('#f3efe6', { side: THREE.DoubleSide }), false); sh.position.set(d.p[0], y0 + d.p[1], d.p[2]); }
   }
-  const el = document.createElement('button'); el.type = 'button'; el.className = 'lmk' + (d.kind === 'ac' ? ' ac' : ''); el.innerHTML = d.kind === 'ac' ? AC_SVG : BULB_SVG;
+  const el = document.createElement('button'); el.type = 'button'; el.className = 'lmk' + (d.kind === 'ac' ? ' ac' : d.kind === 'robot' ? ' robot' : ''); el.innerHTML = d.kind === 'ac' ? AC_SVG : d.kind === 'robot' ? ROBOT_SVG : BULB_SVG;
   el.addEventListener('pointerdown', e => e.stopPropagation());
   el.addEventListener('click', e => { e.stopPropagation(); opts.onLampClick && opts.onLampClick(id); });
   const mp = d.kind === 'string' ? d.pts[Math.floor(d.pts.length * 0.5)] : d.p;
@@ -1592,6 +1638,11 @@ function animLamps(dt, now) {
     for (const s of o.glows) s.visible = here;
     for (const s of o.glows) s.material.opacity = v * (o.d.kind === 'ac' ? 0.35 + 0.15 * Math.sin(now / 400) : (0.2 + 0.8 * night) * (o.d.kind === 'string' ? 0.9 + 0.1 * Math.sin(now / 300 + s.id) : 1));
     if (o.jet) { o.jet.visible = o.splash.visible = v > 0.05; o.jet.scale.y = v * (0.85 + 0.15 * Math.sin(now / 120)); o.jet.position.y = o.d.p[1] + 0.45 * o.jet.scale.y; }
+    if (o.robot) { let tx, tz;
+      if (o.target > 0) { const t = now / 1000; tx = 2.3 + 1.55 * Math.sin(t * 0.21); tz = 5.2 + 3.5 * Math.sin(t * 0.13 + 1); } else { tx = o.home[0]; tz = o.home[1]; }
+      const ddx = tx - o.rx, ddz = tz - o.rz, dist = Math.hypot(ddx, ddz);
+      if (dist > 0.005) { const st = Math.min(dist, dt * 0.35); o.rx += ddx / dist * st; o.rz += ddz / dist * st; o.robot.rotation.y = Math.atan2(-ddz, ddx); }
+      o.robot.position.x = o.rx; o.robot.position.z = o.rz; o.mk.position.set(o.rx, FLOOR_Y[o.d.f] + 0.45, o.rz); }
     let mv = lampVisibleFor(o.d.f, curKey);
     if (mv && o.d.f === 'out') { if (doOcc) o.occ = occluded(o.mk); mv = !o.occ; }
     o.mk.visible = mv;
