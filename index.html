@@ -893,7 +893,7 @@ Object.values(floors).forEach(g => house.add(g));
 const context = new THREE.Group(); scene.add(context);
 const neighbours = new THREE.Group(); scene.add(neighbours);
 
-const GF_POLY = [[0, 0], [4.3, 0], [4.3, 1.8], [9.2, 1.8], [7.25, 12.3], [4.2, 12.3], [4.2, 9.5], [0, 9.5]];
+const GF_POLY = [[0, 0], [4.5, 0], [4.5, 1.75], [6.3, 1.75], [6.3, 1.7], [7.95, 1.7], [7.95, 2.55], [slantX(2.55), 2.55], [slantX(12.35), 12.35], [4.5, 12.35], [4.5, 9.6], [0, 9.6]];
 const FF_POLY = [[0, 0], [6.2, 0], [6.2, 1.7], [7.5, 1.7], [7.5, 1.8], [9.25, 1.8], [9.0, 9.5], [0, 9.5]];
 const STAIR_HOLE = rect(3.8, 6.0, 4.9, 6.0);
 const EXT = 0.3;
@@ -902,45 +902,54 @@ const EXT = 0.3;
 {
   const g = floors.gf;
   slab(g, GF_POLY, 0, 0.3, mat('#b8bbba', { roughness: 0.5 }));
-  slab(g, rect(4.3, 6.0, 1.8, 4.2), 0.012, 0.012, mat('#b46d4c', { roughness: 0.7 }));
-  slab(g, rect(6.0, 7.4, 1.8, 3.3), 0.012, 0.012, M.tile);
-  slab(g, [[7.4, 1.8], [9.2, 1.8], [slantX(7.2), 7.2], [6.0, 7.2], [6.0, 4.2], [7.4, 4.2]], 0.012, 0.012, M.tile);
+  slab(g, [[4.5, 1.75], [6.3, 1.75], [6.3, 4.05], [6.4, 4.05], [6.4, 6.2], [4.0, 6.2], [4.0, 4.05], [4.5, 4.05]], 0.012, 0.012, mat('#9fa2a0', { roughness: 0.6 })); // hal: grijze gietvloer
+  slab(g, rect(6.3, 7.95, 1.7, 4.05), 0.012, 0.012, M.tile);
+  slab(g, [[7.95, 2.55], [slantX(2.55), 2.55], [slantX(7.05), 7.05], [6.4, 7.05], [6.4, 4.05], [7.45, 4.05], [7.45, 2.85], [7.95, 2.85]], 0.012, 0.012, M.tile);
+  // begane grond 1-op-1 naar plattegrond (maten in m, y = vanaf voorgevel)
+  const T0 = slantX(2.55), T1 = slantX(12.35);
   const ext = [
-    { a: [0, 9.5], b: [0, 0], m: M.party },
-    { a: [0, 0], b: [4.3, 0], ops: [{ s: 0.3, e: 1.9, lo: 0.45, hi: 2.3, k: 'win' }, { s: 2.35, e: 4.1, lo: 0.45, hi: 2.3, k: 'win', split: [3.5, 4.04] }] },
-    { a: [4.3, 0], b: [4.3, 1.8], ops: [{ s: 0.15, e: 1.55, lo: 0.6, hi: 2.3, k: 'win' }] },
-    { a: [4.3, 1.8], b: [7.4, 1.8], ops: [{ s: 0.35, e: 1.3, k: 'door', hi: 2.25, blue: true }, { s: 1.4, e: 1.6, lo: 0.9, hi: 2.25, k: 'win' }] },
-    { a: [7.4, 1.8], b: [9.2, 1.8], m: M.brick, ops: [{ s: 0.12, e: 1.02, k: 'door', hi: 2.25, blue: true }] },
-    { a: [9.2, 1.8], b: [7.25, 12.3], m: M.brick },
-    { a: [7.25, 12.3], b: [4.2, 12.3], ops: [{ s: 0.35, e: 2.95, lo: 0.4, hi: 2.4, k: 'win' }] },
-    { a: [4.2, 12.3], b: [4.2, 9.5], ops: [{ s: 0.1, e: 1.15, lo: 0.4, hi: 2.4, k: 'win' }, { s: 1.75, e: 2.6, k: 'door', hi: 2.3 }] },
-    { a: [4.2, 9.5], b: [0, 9.5], ops: [{ s: 0.7, e: 3.45, lo: 0.02, hi: 2.3, k: 'glass' }] },
+    { a: [0, 9.6], b: [0, 0], m: M.party },
+    { a: [0, 0], b: [4.5, 0], ops: [{ s: 0.15, e: 2.0, lo: 0.45, hi: 2.3, k: 'win' }, { s: 2.6, e: 4.4, lo: 0.45, hi: 2.3, k: 'win', split: [3.8, 4.34] }] },
+    { a: [4.5, 0], b: [4.5, 1.75], ops: [{ s: 0.15, e: 1.55, lo: 0.6, hi: 2.3, k: 'win' }] }, // klein zijraam bij voordeur
+    { a: [4.5, 1.75], b: [6.3, 1.75], ops: [{ s: 0.2, e: 1.2, k: 'door', hi: 2.25, blue: true }] }, // voordeur
+    { a: [6.3, 1.7], b: [7.95, 1.7], ops: [{ s: 0.7, e: 1.1, lo: 1.5, hi: 2.1, k: 'win' }] }, // wc-raampje
+    { a: [7.95, 1.7], b: [7.95, 2.55], m: M.brick },
+    { a: [7.95, 2.55], b: [T0, 2.55], m: M.brick },
+    { a: [T0, 2.55], b: [T1, 12.35], m: M.brick }, // schuine buitenmuur
+    { a: [T1, 12.35], b: [4.5, 12.35], ops: [{ s: 0.3, e: 2.5, lo: 0.4, hi: 2.4, k: 'win' }] },
+    { a: [4.5, 12.35], b: [4.5, 9.6], ops: [{ s: 0.1, e: 1.2, lo: 0.4, hi: 2.4, k: 'win' }, { s: 1.75, e: 2.6, k: 'door', hi: 2.3 }] },
+    { a: [4.5, 9.6], b: [0, 9.6], ops: [{ s: 1.3, e: 3.85, lo: 0.02, hi: 2.3, k: 'glass' }] }, // schuifpui
+    { a: [T0, 2.55], b: [T0 + 1.05, 2.55], m: M.brick, ops: [{ s: 0.1, e: 0.95, k: 'door', hi: 2.25, blue: true }] }, // tunnel achterom: voordeurtje
+    { a: [T0 + 1.05, 2.55], b: [T1 + 1.05, 12.35], m: M.brick }, // tunnel: buitenwand
   ];
   ext.forEach(w => wall(g, { t: EXT, m: M.facade, ...w }, Y_GF, H_EXT));
+  slab(g, [[T0, 2.55], [T0 + 1.05, 2.55], [T1 + 1.05, 12.35], [T1, 12.35]], 0.03, 0.03, M.pave); // tunnel vloer
   const int = [
-    { a: [4.3, 1.8], b: [4.3, 4.2] },
-    { a: [3.75, 4.2], b: [4.3, 4.2] },
-    { a: [3.75, 4.2], b: [3.75, 6.0], ops: [{ s: 0.2, e: 1.0, k: 'door' }] },
-    { a: [3.75, 6.0], b: [6.0, 6.0] },
-    { a: [6.0, 1.8], b: [6.0, 7.2], ops: [{ s: 0.3, e: 1.0, k: 'door' }, { s: 1.65, e: 2.3, k: 'door' }] },
-    { a: [6.0, 3.3], b: [7.4, 3.3] },
-    { a: [6.0, 4.2], b: [7.4, 4.2] },
-    { a: [7.4, 1.8], b: [7.4, 4.2] },
-    { a: [6.0, 7.2], b: [slantX(7.2), 7.2] }, // blinde muur keuken/bijkeuken
+    { a: [4.5, 1.75], b: [4.5, 4.05] },
+    { a: [4.0, 4.05], b: [4.5, 4.05] },
+    { a: [4.0, 4.05], b: [4.0, 6.2], ops: [{ s: 0.0, e: 0.75, k: 'door' }] }, // deur woonkamer
+    { a: [4.0, 6.2], b: [6.4, 6.2] }, // achterwand trap
+    { a: [6.3, 1.7], b: [6.3, 4.05], ops: [{ s: 0.5, e: 1.1, k: 'door' }, { s: 1.4, e: 2.2, k: 'door' }] }, // deuren wc en meterkast
+    { a: [6.3, 2.85], b: [7.95, 2.85] }, // wc | meterkast
+    { a: [7.45, 2.85], b: [7.45, 4.05] }, // achterwand meterkast
+    { a: [6.3, 4.05], b: [7.45, 4.05] },
+    { a: [6.4, 4.05], b: [6.4, 7.7], ops: [{ s: 0.0, e: 0.8, k: 'door' }] }, // deur hal -> bijkeuken (naast de trap)
+    { a: [6.4, 7.05], b: [slantX(7.05), 7.05] }, // blinde muur bijkeuken | keuken
   ];
   int.forEach(w => wall(g, w, Y_GF, H_INT));
-  stairs(g, [[5.55, 4.35], [5.55, 5.45], [3.9, 5.45]], 0, Y_FF, 14, 0.85);
+  stairs(g, [[5.95, 4.5], [5.95, 5.72], [4.25, 5.72]], 0, Y_FF, 14, 0.8); // trap: onderaan bij deur bijkeuken, kwartslag, omhoog richting woonkamer
 
-  const velvet = mat('#6b2e22', { roughness: 0.95 }), cream = mat('#e6dcae', { roughness: 0.7 }), dark = mat('#4a3020', { roughness: 0.6 });
+  const velvet = mat('#7a3820', { roughness: 0.95 }), cream = mat('#e6dcae', { roughness: 0.7 }), dark = mat('#4a3020', { roughness: 0.6 });
   const mint = mat('#a9cfc4', { roughness: 0.5 }), black = mat('#1d1e20', { roughness: 0.5 }), curtain = mat('#3d5872', { roughness: 1 });
-  block(g, 1.0, 3.3, 1.2, 3.9, 0, 0.015, mat('#9a9d98'));
-  block(g, 3.35, 4.15, 0.9, 4.1, 0, 0.42, velvet); block(g, 3.9, 4.15, 0.9, 4.1, 0.42, 0.85, velvet);
-  block(g, 0.9, 3.35, 0.3, 1.15, 0, 0.42, velvet); block(g, 1.6, 3.35, 0.3, 0.55, 0.42, 0.85, velvet);
-  cyl(g, 2.5, 2.1, 0.4, 0.42, 0.46, M.oak, 24); cyl(g, 2.5, 2.1, 0.03, 0, 0.42, M.oak, 6);
-  block(g, 1.2, 1.95, 3.3, 4.05, 0, 0.45, mat('#efe9dd')); block(g, 1.2, 1.95, 3.85, 4.05, 0.45, 0.85, mat('#efe9dd'));
-  block(g, 0.15, 0.6, 1.6, 3.6, 0.05, 0.55, mat('#d39a84'));
-  block(g, 0.28, 0.34, 1.95, 3.25, 0.65, 1.38, black);
-  block(g, 0.15, 0.17, 1.0, 1.5, 1.4, 2.0, mat('#e9e4dc')); block(g, 0.15, 0.17, 3.8, 4.3, 1.4, 2.1, mat('#c2453f'));
+  block(g, 1.0, 3.3, 1.0, 3.9, 0, 0.015, mat('#d9d1c2'));
+  block(g, 3.55, 4.35, 0.9, 3.95, 0, 0.42, velvet); block(g, 4.1, 4.35, 0.9, 3.95, 0.42, 0.85, velvet);
+  block(g, 2.35, 3.35, 0.35, 1.45, 0, 0.42, velvet); // chaise longue richting raam
+  cyl(g, 2.75, 2.45, 0.38, 0.42, 0.46, M.oak, 24); cyl(g, 2.75, 2.45, 0.03, 0, 0.42, M.oak, 6);
+  { const ch = mat('#efe9dd', { roughness: 0.9 }); cyl(g, 2.3, 4.95, 0.3, 0, 0.05, ch, 20); cyl(g, 2.3, 4.95, 0.05, 0.05, 0.3, ch, 8); cyl(g, 2.3, 4.95, 0.38, 0.3, 0.5, ch, 20); block(g, 1.95, 2.65, 5.2, 5.33, 0.5, 0.85, ch); // witte draaistoel
+    cyl(g, 3.35, 4.75, 0.22, 0, 0.55, mat('#ece3b8', { roughness: 0.6 }), 20); } // bijzettafel
+  block(g, 0.15, 0.6, 0.6, 3.4, 0.05, 0.55, mat('#d8a69a')); // roze tv-meubel
+  block(g, 0.28, 0.34, 1.65, 2.95, 0.65, 1.38, black);
+  for (const [z0, z1, y0f, y1f, c] of [[0.7, 1.1, 1.45, 2.05, '#2f4a6b'], [1.25, 1.9, 1.6, 2.4, '#e9e4dc'], [1.25, 1.75, 1.45, 1.55, '#e9e4dc'], [2.05, 2.5, 1.85, 2.4, '#c9a7a0'], [2.05, 2.55, 1.45, 1.75, '#efe9dd'], [2.7, 3.2, 1.5, 2.1, '#3d6f6a']]) block(g, 0.15, 0.18, z0, z1, y0f, y1f, mat(c)); // schilderijen
   block(g, 0.15, 0.55, 5.6, 8.7, 0, 2.1, dark);
   for (const yy of [0.9, 1.3, 1.7]) block(g, 0.55, 0.57, 5.7, 8.6, yy, yy + 0.03, mat('#2e1d14'));
   { const l = addMesh(g, new THREE.CircleGeometry(0.12, 20), M.lamp, false); l.rotation.y = Math.PI / 2; l.position.set(0.16, 1.85, 5.1); }
@@ -949,9 +958,9 @@ const EXT = 0.3;
   for (const z of [6.4, 7.2, 8.0]) for (const x of [1.0, 2.9]) { block(g, x - 0.22, x + 0.22, z - 0.22, z + 0.22, 0.42, 0.46, mint); block(g, x - 0.03, x + 0.03, z - 0.03, z + 0.03, 0, 0.42, M.white); }
   cyl(g, 1.95, 7.2, 0.005, 1.95, 2.6, M.white, 4);
   { const sh = addMesh(g, new THREE.CylinderGeometry(0.14, 0.26, 0.45, 18, 1, true), mat('#f3f0ea', { side: THREE.DoubleSide })); sh.position.set(1.95, 1.75, 7.2); }
-  for (const [x0, x1] of [[0.1, 0.35], [3.95, 4.2]]) block(g, x0, x1, 0.16, 0.22, 0.05, 2.55, curtain);
+  for (const [x0, x1] of [[0.1, 0.35], [1.95, 2.3], [3.95, 4.2]]) block(g, x0, x1, 0.16, 0.22, 0.05, 2.55, curtain);
+  for (const [x0, x1] of [[0.35, 1.85], [2.4, 4.05]]) block(g, x0, x1, 0.1, 0.13, 0.5, 2.28, mat('#b37a46', { roughness: 0.8 })); // houten jaloezieen
   block(g, 0.15, 0.6, 9.28, 9.34, 0.05, 2.55, curtain);
-  block(g, 3.85, 4.45, 6.1, 7.9, 0, 0.95, cream);
   { cyl(g, 3.7, 4.35, 0.17, 0, 0.3, mat('#b5643f'), 12); blob(g, 3.7, 0.75, 4.35, 0.3, 1.3, M.hedge); }
   const pink = mat('#c99a93', { roughness: 0.9 });
   seg(g, [slantX(7.25) - 0.17, 7.25], [slantX(12.15) - 0.17, 12.15], 0, Math.hypot(slantX(7.25) - slantX(12.15), 4.9), 0, 2.6, 0.02, pink);
@@ -969,18 +978,29 @@ const EXT = 0.3;
     block(g, x - 0.05, x, z - 0.03, z + 0.03, 1.75, 2.0, black);
     const sh = addMesh(g, new THREE.CylinderGeometry(0.07, 0.11, 0.14, 14), black); sh.position.set(x - 0.15, 2.0, z);
     const gl = addMesh(g, new THREE.CircleGeometry(0.09, 14), M.lamp, false); gl.rotation.x = Math.PI / 2; gl.position.set(x - 0.15, 1.925, z); }
-  block(g, 5.5, 5.94, 6.5, 7.14, 0, 0.85, cream);
-  block(g, 4.75, 5.45, 6.15, 6.85, 0.1, 0.5, mat('#d2552a')); block(g, 4.75, 5.45, 6.15, 6.35, 0.5, 1.0, mat('#d2552a'));
-  cyl(g, 5.1, 6.5, 0.04, 0, 0.1, black, 8);
-  cyl(g, 4.6, 6.2, 0.13, 0, 0.45, mint, 12); blob(g, 4.6, 0.62, 6.2, 0.18, 0.7, M.lamp);
-  cyl(g, 5.7, 6.25, 0.14, 0, 0.3, mat('#b5643f'), 12); blob(g, 5.7, 0.8, 6.25, 0.28, 1.5, M.hedge);
-  block(g, 6.05, 7.35, 3.22, 3.25, 0, 1.25, M.sage);
-  block(g, 6.6, 7.0, 2.72, 3.22, 0.3, 0.72, M.white);
-  block(g, 6.65, 6.95, 3.2, 3.22, 0.95, 1.15, M.white);
-  block(g, 7.1, 7.35, 1.9, 2.35, 0.4, 0.82, M.oak);
-  block(g, 7.08, 7.35, 1.88, 2.37, 0.82, 0.92, M.white);
-  block(g, 7.28, 7.32, 1.95, 1.99, 0.92, 1.12, M.copper);
-  block(g, 8.0, 8.6, 6.4, 7.0, 0, 0.85, M.white);
+  { const or = mat('#d9622b', { roughness: 0.85 }); cyl(g, 5.1, 6.55, 0.22, 0, 0.06, black, 16); cyl(g, 5.1, 6.55, 0.05, 0.06, 0.3, black, 8); block(g, 4.75, 5.45, 6.2, 6.9, 0.3, 0.45, or); block(g, 4.75, 5.45, 6.12, 6.3, 0.45, 1.05, or); } // oranje fauteuil
+  { const gl = mat('#bfe3dc', { transparent: true, opacity: 0.45, roughness: 0.1 }); block(g, 4.15, 4.55, 6.08, 6.42, 0.42, 0.45, gl); block(g, 4.15, 4.18, 6.08, 6.42, 0, 0.42, gl); block(g, 4.52, 4.55, 6.08, 6.42, 0, 0.42, gl); } // glazen bijzettafel
+  cyl(g, 3.98, 6.3, 0.14, 0, 0.32, mat('#b5643f'), 12); blob(g, 3.98, 0.85, 6.3, 0.26, 1.6, M.hedge); // plant in de hoek
+  // wc: toilet tegen achterwand, fonteintje bij raampje
+  block(g, 7.9, 7.93, 1.75, 2.8, 0, 1.25, M.sage);
+  block(g, 7.4, 7.88, 2.05, 2.45, 0.3, 0.72, M.white); block(g, 7.86, 7.9, 2.08, 2.42, 0.95, 1.15, M.white);
+  block(g, 6.95, 7.4, 1.75, 2.0, 0.4, 0.82, M.oak); block(g, 6.93, 7.42, 1.73, 2.02, 0.82, 0.92, M.white);
+  block(g, 7.15, 7.19, 1.76, 1.8, 0.92, 1.12, M.copper);
+  block(g, 7.15, 7.42, 2.95, 3.95, 0.3, 2.0, mat('#c9ccc8')); // meterkast (ondiep)
+  { // bijkeuken: 2 koelkasten, hoge kast, was-droogcombinatie tegen de schuine buitenmuur
+    const sw = z => slantX(z) - 0.2, wht = mat('#eeeeea', { roughness: 0.4 });
+    block(g, sw(3.55) - 0.65, sw(3.55), 2.95, 3.55, 0, 1.85, wht);
+    block(g, sw(4.15) - 0.65, sw(4.15), 3.58, 4.15, 0, 1.6, wht);
+    block(g, sw(4.8) - 0.6, sw(4.8), 4.18, 4.8, 0, 2.0, mat('#f3f1ea', { roughness: 0.5 }));
+    const xw = sw(5.6);
+    block(g, xw - 0.62, xw, 4.95, 5.6, 0, 0.85, M.white); block(g, xw - 0.62, xw, 4.95, 5.6, 0.87, 1.72, M.white);
+    for (const yy of [0.45, 1.3]) { const c = addMesh(g, new THREE.CircleGeometry(0.17, 20), mat('#3a3f45', { roughness: 0.2 }), false); c.rotation.y = -Math.PI / 2; c.position.set(xw - 0.63, yy, 5.27); }
+    const pl = addMesh(g, new THREE.CircleGeometry(0.17, 20), M.white, false); pl.rotation.x = Math.PI / 2; pl.position.set(7.5, H_INT - 0.02, 4.4);
+  }
+  // hal: kapstok op de lange wand, groen kastje bij de voordeur
+  block(g, 4.51, 4.57, 2.1, 3.75, 1.72, 1.8, mat('#1d1e20'));
+  for (let z = 2.25; z < 3.7; z += 0.3) block(g, 4.57, 4.65, z - 0.02, z + 0.02, 1.66, 1.72, mat('#1d1e20'));
+  block(g, 5.88, 6.28, 1.8, 2.15, 0, 0.9, mat('#8e9c80', { roughness: 0.6 }));
 }
 
 // --- 1e verdieping ---
@@ -1435,18 +1455,18 @@ const LAMP_DEF = {
   '3bff1878-6340-4191-9f87-c2b3116afa4b': { f: 'gf', p: [0.2, 1.8, 5.1], I: 7 },              // Donut lamp: lange wand woonkamer tegenover deur naar de hal, ±1,8 m
   'ba7aec82-8bfc-44ea-a3c8-07bd4d11c52f': { f: 'gf', p: [0.75, 0.635, 0.24], I: 5, vp: 0.45 }, // Flowerpot: vensterbank voorgevel, buren-/tv-kant
   '35ae221b-3fbc-44ba-a0c4-a6f661042fe8': { f: 'gf', p: [4.1, 1.6, 3.85], I: 5 },              // Hay Noc: boven de bank, hoek bij korte wand van de gang
-  '2212797c-67aa-4e62-a9d5-0153c0afd54f': { f: 'gf', p: [0.38, 1.08, 1.75], I: 5, kabuki: 0.55 }, // Kartelli Kabuki: roze tv-meubel, voorgevelkant
-  '30835783-ae85-48d8-b402-33541a7a5267': { f: 'gf', p: [4.6, 0.68, 6.2], I: 4 },               // Retro lamp paddestoel (mint paddestoellamp in model)
+  '2212797c-67aa-4e62-a9d5-0153c0afd54f': { f: 'gf', p: [0.38, 1.08, 1.0], I: 5, kabuki: 0.55 }, // Kartelli Kabuki: roze tv-meubel, voorgevelkant
+  '30835783-ae85-48d8-b402-33541a7a5267': { f: 'gf', p: [4.35, 0.68, 6.25], I: 4, panth: 0.45 }, // Retro paddestoel: witte paddestoellamp op glazen tafeltje
   '60bf08e4-467a-413b-9719-b92e3b9c8950': { f: 'gf', p: [3.83, 1.42, 9.08], I: 6, kast: true },  // Lamp op gele kast: groene kast in hoek bij tuinpui/gordijn
   '650d7b18-ca06-46db-bb81-cae1545fa560': { f: 'gf', kind: 'group', p: [0.2, 0.3, 5.1] },        // Donut lamp stopcontact: Shelly in stopcontact onder de Donut lamp
-  '9b4c292d-7165-4ac6-8947-b445f51ad017': { f: 'gf', p: [4.05, 0.82, 0.85], I: 4, table: true }, // Zuiver Pixi: vensterbank klein zijraam bij voordeur
-  'e75bf0c4-8bcb-430c-96e8-b4cc121179e5': { f: 'gf', p: [5.6, 0.78, 12.02], I: 5, trash: 0.4 }, // &Tradition Trash Me: vensterbank uitbouw keuken, achtergevel
+  '9b4c292d-7165-4ac6-8947-b445f51ad017': { f: 'gf', p: [4.3, 0.82, 0.85], I: 4, table: true }, // Zuiver Pixi: vensterbank klein zijraam bij voordeur
+  'e75bf0c4-8bcb-430c-96e8-b4cc121179e5': { f: 'gf', p: [5.6, 0.78, 12.12], I: 5, trash: 0.4 }, // &Tradition Trash Me: vensterbank uitbouw keuken, achtergevel
   '420c395a-d39e-4a71-93af-cbbcae7439d4': { f: 'gf', p: [sx(9.9) - 0.35, 1.92, 9.9], I: 5 },    // Keukenwand lamp wasbak
   '794dacce-54d5-44f2-a024-0ffde08526c3': { f: 'gf', p: [sx(8.2) - 0.35, 1.92, 8.2], I: 5 },    // Keukenwand lamp kookplaat (links van kookplaat)
   '56a0db33-9452-425a-ab3b-1821da3d77dc': { f: 'gf', kind: 'group', p: [sx(9.05) - 0.4, 2.35, 9.05] }, // Keuken wand lampen = schakelaar van beide wandlampen
   '0b1c5c49-9fc7-40e8-8de3-d0f8fc932a7e': { f: 'gf', p: [5.0, 2.25, 3.0], I: 6, pend: true },   // Hal flowerpot hanglamp
   'b76cb351-61d1-4475-84e8-1d459d4c0e83': { f: 'out', p: [4.45, 2.3, 1.5], I: 7 },              // Lamp voordeur buiten
-  '6e3bf2b0-20c5-4314-820d-2341bea7501d': { f: 'out', p: [4.02, 2.4, 10.95], I: 7 },            // Achterdeur lamp
+  '6e3bf2b0-20c5-4314-820d-2341bea7501d': { f: 'out', p: [4.32, 2.4, 10.95], I: 7 },            // Achterdeur lamp
   'ec31fa5c-de02-4aa1-bfe2-f61875be6f0c': { f: 'out', kind: 'string', I: 5 },                   // Prikkabel tuin
   '5111de89-d753-43ba-ba0d-1bee2c6072f8': { f: 'ff', kind: 'ac', p: [5.93, 2.15, 5.45] },          // Airco: trapgat, tegen muur slaapkamer 4
   'f0259acc-46d0-4bdf-aa97-cb3bcd844167': { f: 'out', kind: 'fountain', p: [...(() => { const [x, z] = G(7.2, 3.4); return [x, 0.4, z]; })()] }, // Fontein
@@ -1489,13 +1509,18 @@ for (const [id, d] of Object.entries(LAMP_DEF)) {
     const lp = d.kind === 'string' ? [pts[Math.floor(pts.length * 0.15)], pts[Math.floor(pts.length * 0.5)], pts[Math.floor(pts.length * 0.85)]] : [d.p];
     for (const p of lp) { const L = new THREE.PointLight('#ffc27a', 0, d.kind === 'string' ? 7 : 6.5, 2); L.position.set(p[0], y0 + p[1] - 0.15, p[2]); parent.add(L); o.lights.push(L); }
     for (const p of pts) {
-      const b = new THREE.Mesh(new THREE.SphereGeometry(d.kind === 'string' ? 0.035 : (d.vp != null || d.kabuki != null || d.trash != null || d.kast) ? 0.025 : 0.075, 10, 8), new THREE.MeshStandardMaterial({ color: '#fff6e0', emissive: '#ffcf80', emissiveIntensity: 0, roughness: 0.3 }));
+      const b = new THREE.Mesh(new THREE.SphereGeometry(d.kind === 'string' ? 0.035 : (d.vp != null || d.kabuki != null || d.trash != null || d.kast || d.panth != null) ? 0.025 : 0.075, 10, 8), new THREE.MeshStandardMaterial({ color: '#fff6e0', emissive: '#ffcf80', emissiveIntensity: 0, roughness: 0.3 }));
       b.position.set(p[0], y0 + p[1], p[2]); parent.add(b); o.bulbs.push(b);
       const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0 }));
       s.scale.setScalar(d.kind === 'string' ? 0.55 : 1.5); s.position.copy(b.position); parent.add(s); o.glows.push(s);
     }
     if (d.pend) { const top = y0 + 2.6, c = beam(parent, new THREE.Vector3(d.p[0], top, d.p[2]), new THREE.Vector3(d.p[0], y0 + d.p[1] + 0.12, d.p[2]), 0.012, mat('#222')); c.castShadow = false;
       const sh = addMesh(parent, new THREE.CylinderGeometry(0.1, 0.24, 0.2, 18, 1, true), mat('#efe9dc', { side: THREE.DoubleSide }), false); sh.position.set(d.p[0], y0 + d.p[1] + 0.08, d.p[2]); }
+    if (d.panth != null) { const wm = mat('#f4f3ef', { roughness: 0.25 }), b0 = y0 + d.panth, X = d.p[0], Z = d.p[2];
+      cyl(parent, X, Z, 0.08, b0, b0 + 0.02, wm, 18); cyl(parent, X, Z, 0.015, b0 + 0.02, b0 + 0.28, wm, 8);
+      const dm = addMesh(parent, new THREE.SphereGeometry(0.17, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), mat('#f4f3ef', { roughness: 0.25, side: THREE.DoubleSide }), false); dm.position.set(X, b0 + 0.25, Z);
+      const inn = new THREE.MeshStandardMaterial({ color: '#fff8ea', emissive: '#ffdca8', emissiveIntensity: 0, side: THREE.BackSide }); const im = addMesh(parent, new THREE.SphereGeometry(0.165, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2), inn, false); im.position.copy(dm.position);
+      o.shadeMat = inn; o.opalOnly = true; }
     if (d.kabuki != null) { // Kartell Kabuki: transparante lamp, 70 cm
       const prof = [[0.09,0],[0.1,0.03],[0.06,0.07],[0.045,0.09],[0.07,0.13],[0.045,0.17],[0.065,0.21],[0.04,0.25],[0.055,0.29],[0.03,0.33],[0.035,0.36],[0.1,0.375],[0.125,0.68],[0.118,0.7]].map(([r, y]) => new THREE.Vector2(r, y));
       const km = new THREE.MeshStandardMaterial({ color: '#eef4f7', transparent: true, opacity: 0.6, roughness: 0.15, metalness: 0.05, side: THREE.DoubleSide, emissive: '#ffd9a0', emissiveIntensity: 0, depthWrite: false });
