@@ -1394,7 +1394,7 @@ function gblock(g, u0, u1, v0, v1, y0, y1, m) {
     const [x, z] = G(u, v); const r = 0.15 + rnd() * 0.25;
     blob(g, x, r * 0.8, z, r, 0.9, mat(flowerCols[Math.floor(rnd() * flowerCols.length)], { roughness: 0.9 })).castShadow = false;
   }
-  { const [x, z] = G(7.2, 3.4); cyl(g, x, z, 0.5, 0, 0.38, mat('#a4a9ab', { metalness: 0.6, roughness: 0.4 }), 24); cyl(g, x, z, 0.46, 0.38, 0.39, mat('#2a3a33', { roughness: 0.1 }), 24);
+  { const [x, z] = G(7.4, 9.3); cyl(g, x, z, 0.5, 0, 0.38, mat('#a4a9ab', { metalness: 0.6, roughness: 0.4 }), 24); cyl(g, x, z, 0.46, 0.38, 0.39, mat('#2a3a33', { roughness: 0.1 }), 24);
     for (let k = 0; k < 8; k++) blob(g, x + Math.cos(k * 0.5 + 2) * 0.65, 0.08, z + Math.sin(k * 0.5 + 2) * 0.65, 0.12, 0.6, mat('#c9c4bb')); }
   { const [x, z] = G(4.2, 16.8); cyl(g, x, z, 1.6, 0, 0.05, M.pave, 36);
     for (const dx of [-0.5, 0.5]) { block(g, x + dx - 0.3, x + dx + 0.3, z - 0.3, z + 0.3, 0, 0.35, M.white); block(g, x + dx - 0.3, x + dx + 0.3, z + 0.2, z + 0.3, 0.35, 0.8, M.white); }
@@ -1600,11 +1600,11 @@ const LAMP_DEF = {
   '56a0db33-9452-425a-ab3b-1821da3d77dc': { f: 'gf', kind: 'group', p: [sx(9.05) - 0.4, 2.35, 9.05] }, // Keuken wand lampen = schakelaar van beide wandlampen
   '0b1c5c49-9fc7-40e8-8de3-d0f8fc932a7e': { f: 'gf', p: [5.0, 2.25, 3.0], I: 6, pend: true },   // Hal flowerpot hanglamp
   'b76cb351-61d1-4475-84e8-1d459d4c0e83': { f: 'out', p: [4.45, 2.3, 1.5], I: 7 },              // Lamp voordeur buiten
-  '6e3bf2b0-20c5-4314-820d-2341bea7501d': { f: 'out', p: [4.32, 2.4, 10.95], I: 7 },            // Achterdeur lamp
+  '6e3bf2b0-20c5-4314-820d-2341bea7501d': { f: 'out', p: [4.3, 2.0, 10.8], I: 7 },            // Achterdeur lamp
   'ec31fa5c-de02-4aa1-bfe2-f61875be6f0c': { f: 'out', kind: 'string', I: 5 },                   // Prikkabel tuin
   '5712c8d4-2337-40c7-9569-7b9ad6c359ab': { f: 'gf', kind: 'robot', p: [0.42, 0.0, 8.9] },     // Roborock Bert: dock in hoek buurmuur / schuifpui
   '5111de89-d753-43ba-ba0d-1bee2c6072f8': { f: 'ff', kind: 'ac', p: [6.07, 2.15, 5.45] },          // Airco: trapgat, tegen muur slaapkamer 4
-  'f0259acc-46d0-4bdf-aa97-cb3bcd844167': { f: 'out', kind: 'fountain', p: [...(() => { const [x, z] = G(7.2, 3.4); return [x, 0.4, z]; })()] }, // Fontein
+  'f0259acc-46d0-4bdf-aa97-cb3bcd844167': { f: 'out', kind: 'fountain', p: [...(() => { const [x, z] = G(7.4, 9.3); return [x, 0.4, z]; })()] }, // Fontein-pomp: 3 m voor het kippenhok
 };
 function catenary(a, b, sag, step) {
   const L = Math.hypot(b[0] - a[0], b[2] - a[2]), n = Math.max(2, Math.round(L / step)), out = [];
@@ -1720,7 +1720,7 @@ function occluded(mk) {
   occDir.copy(occTmp).sub(camera.position); const dist = occDir.length();
   occRay.set(camera.position, occDir.normalize()); occRay.far = Math.max(0, dist - 0.6);
   for (const h of occRay.intersectObjects([house, context, neighbours], true)) {
-    const ob = h.object; if (!ob.isMesh || (ob.material && ob.material.transparent) || !shown(ob)) continue;
+    const ob = h.object; if (!ob.isMesh || (ob.material && ob.material.transparent && ob.material !== M.glass) || !shown(ob)) continue; // glas telt mee: buitenlampen achter het huis niet door de ramen heen tonen
     return true;
   }
   return false;
